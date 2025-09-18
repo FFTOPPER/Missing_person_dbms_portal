@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert'; // For converting data to/from JSON
+import 'package:intl/intl.dart'; // For formatting timestamps
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ViewTasksPage extends StatefulWidget {
@@ -40,9 +41,14 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
     }
 
     String userMessage = _messageController.text;
+    String timestamp = _getCurrentTime();
 
     setState(() {
-      _messages.add({'sender': 'user', 'message': userMessage});
+      _messages.add({
+        'sender': 'user',
+        'message': userMessage,
+        'timestamp': timestamp,
+      });
       _messageController.clear();
     });
 
@@ -56,9 +62,10 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
     await _getBotResponse(userMessage);
   }
 
-  // Function to get the bot's response from the server
+  // Function to get the bot's response from the server and handle JSON format properly
   Future<void> _getBotResponse(String userMessage) async {
-    String response = 'Sorry, I did not understand that.';
+    String responseText = 'Sorry, I did not understand that.';
+    String timestamp = _getCurrentTime();
 
     try {
       final uri = Uri.parse('$serverIp/api/process-input');
@@ -70,20 +77,38 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
 
       if (responseFromServer.statusCode == 200) {
         final data = json.decode(responseFromServer.body);
-        response = data['response'] ?? 'Sorry, no response from the server.';
+
+        if (data['response'] is Map<String, dynamic>) {
+          String dbAction = data['response']['db'] ?? 'Unknown';
+          String status = data['response']['status'] ?? 'Unknown';
+
+          // Format the response properly
+          responseText = "📌 **Database Action:** $dbAction\n✅ **Status:** $status";
+        } else {
+          responseText = data['response'].toString();
+        }
       } else {
-        response = 'Failed to communicate with the server.';
+        responseText = '⚠️ Failed to communicate with the server.';
       }
     } catch (e) {
-      response = 'Error: $e';
+      responseText = '❌ Error: $e';
     }
 
     setState(() {
-      _messages.add({'sender': 'bot', 'message': response});
+      _messages.add({
+        'sender': 'bot',
+        'message': responseText,
+        'timestamp': timestamp,
+      });
     });
 
     // Scroll to the bottom after receiving a message
     _scrollToBottom();
+  }
+
+  // Function to get the current time
+  String _getCurrentTime() {
+    return DateFormat('hh:mm a').format(DateTime.now());
   }
 
   // Function to scroll to the bottom
@@ -138,24 +163,50 @@ class _ViewTasksPageState extends State<ViewTasksPage> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
-                return ListTile(
-                  title: Align(
-                    alignment: message['sender'] == 'user'
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: message['sender'] == 'user'
-                            ? Colors.blue[100]
-                            : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(10),
+                bool isUser = message['sender'] == 'user';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    mainAxisAlignment:
+                    isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    children: [
+                      if (!isUser) // Bot's icon
+                        CircleAvatar(
+                          backgroundColor: Colors.blueAccent,
+                          child: Icon(Icons.smart_toy, color: Colors.white),
+                        ),
+                      SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: isUser
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isUser ? Colors.blue[100] : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: BoxConstraints(maxWidth: 250),
+                            child: Text(
+                              message['message']!,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            message['timestamp']!,
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        message['message']!,
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
+                      SizedBox(width: 8),
+                      if (isUser) // User's icon
+                        CircleAvatar(
+                          backgroundColor: Colors.green,
+                          child: Icon(Icons.person, color: Colors.white),
+                        ),
+                    ],
                   ),
                 );
               },

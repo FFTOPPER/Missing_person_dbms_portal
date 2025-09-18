@@ -22,7 +22,7 @@ class _UploadPageState extends State<UploadPage> {
   XFile? _image;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _relationController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _emotionalConnectController = TextEditingController();
   stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _isListening = false;
 
@@ -79,9 +79,9 @@ class _UploadPageState extends State<UploadPage> {
 
     String name = _nameController.text.trim();
     String relation = _relationController.text.trim();
-    String description = _descriptionController.text.trim();
+    String emotionalConnect = _emotionalConnectController.text.trim();
 
-    if (name.isEmpty || relation.isEmpty || description.isEmpty) {
+    if (name.isEmpty || relation.isEmpty || emotionalConnect.isEmpty) {
       _showErrorDialog('Please fill in all the details.');
       return;
     }
@@ -97,7 +97,7 @@ class _UploadPageState extends State<UploadPage> {
       'image': base64Image,
       'name': name,
       'relation': relation,
-      'description': description,
+      'emotional_connect': emotionalConnect,
     };
 
     try {
@@ -250,13 +250,13 @@ class _UploadPageState extends State<UploadPage> {
                 ),
                 SizedBox(height: 10),
                 TextField(
-                  controller: _descriptionController,
+                  controller: _emotionalConnectController,
                   decoration: InputDecoration(
-                    labelText: 'Description',
+                    labelText: 'Emotional Connect',
                     border: OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(Icons.mic, color: Colors.blue),
-                      onPressed: () => _startListening(_descriptionController),
+                      onPressed: () => _startListening(_emotionalConnectController),
                     ),
                   ),
                 ),
