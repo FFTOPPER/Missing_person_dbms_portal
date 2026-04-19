@@ -1,0 +1,4 @@
+- AI Face Recognition
+- Cloud Deployment
+- Smart Alerts
+- Government API Integration
