@@ -1,0 +1,33 @@
+# requirements.txt
+
+# Flutter Project Dependencies are managed in pubspec.yaml
+# This file is for backend/server-side PHP environment reference
+
+PHP >= 8.0
+MySQL >= 5.7
+Apache Server
+XAMPP >= 7.4
+phpMyAdmin
+Composer (optional)
+
+# APIs Used
+Google Gemini API
+Google Maps API
+
+# Development Tools
+Flutter SDK >= 3.0
+Dart SDK
+Android Studio
+VS Code
+Git
+
+# Recommended PHP Extensions
+mysqli
+curl
+json
+mbstring
+openssl
+fileinfo
+
+# Operating System
+Windows / Linux / macOS
